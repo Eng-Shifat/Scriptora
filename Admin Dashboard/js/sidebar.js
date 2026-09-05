@@ -47,10 +47,9 @@
   const sidebarHTML = `
   <aside class="s-sidebar" id="globalSidebar">
     <a class="s-logo" href="../Homepage/index.html">
-      <div class="s-logo-icon">O</div>
+      <div class="s-logo-icon"><img src="../Homepage/assets/logo.png" alt="Opascript" style="height:46px;width:auto;object-fit:contain;display:block;"></div>
       <div class="s-logo-text">
         <strong>Opascript</strong>
-        <span>Admin Panel</span>
       </div>
     </a>
 

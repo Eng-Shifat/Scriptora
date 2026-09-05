@@ -32,7 +32,7 @@
 .s-logo {
   height: 56px;
   padding: 0 16px;
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 0;
   border-bottom: 1px solid var(--s-border);
   overflow: hidden;
   text-decoration: none;
@@ -43,18 +43,19 @@
 }
 .s-logo:hover { opacity: 0.85; }
 .s-logo-icon {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, #7c5cff, #b69dfd);
-  border-radius: 8px;
+  height: 46px;
+  width: auto;
+  background: transparent;
+  border-radius: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: .9rem; font-weight: 800; color: #fff;
-  box-shadow: 0 0 16px rgba(124,92,255,0.3), 0 0 0 1px rgba(212,175,106,0.35);
   flex-shrink: 0;
+  box-shadow: none;
+  margin-right: -16px;
 }
 .s-logo-text strong {
-  font-size: 1.1rem; font-weight: 700;
+  font-size: 1.25rem; font-weight: 700;
   display: block; color: var(--s-text);
-  letter-spacing: -.2px;
+  letter-spacing: -.3px;
   white-space: nowrap;
 }
 .s-logo-text span {
@@ -150,10 +151,16 @@
     justify-content: center;
     gap: 0;
   }
+  .s-sidebar .s-logo-icon {
+    margin-right: 0;
+  }
   .s-sidebar:hover .s-logo {
     padding: 0 16px;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 0;
+  }
+  .s-sidebar:hover .s-logo-icon {
+    margin-right: -16px;
   }
   .s-logo-text {
     white-space: nowrap;

@@ -368,8 +368,178 @@ function initSearch() {
 }
 
 // ── NEW ORDER MODAL (simple alert placeholder) ──
+
+function refreshOrders() {
+  const btn = document.getElementById('btnRefresh');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin .7s linear infinite;display:inline-block;"></i> Refreshing...';
+  }
+  if (typeof loadSupabaseOrders === 'function') {
+    loadSupabaseOrders().finally(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-refresh"></i> Refresh';
+      }
+      showOMToast('Orders refreshed!', '#22c987');
+    });
+  } else {
+    location.reload();
+  }
+}
+
 function openNewOrder() {
-  alert('New Order form — connect to your backend here.');
+  // Modal already exists?
+  if (document.getElementById('newOrderModal')) {
+    document.getElementById('newOrderModal').style.display = 'flex';
+    return;
+  }
+
+  // Modal HTML inject
+  const modal = document.createElement('div');
+  modal.id = 'newOrderModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora','Inter',sans-serif;
+  `;
+  modal.innerHTML = `
+    <div style="background:#1a1f35;border:1px solid rgba(255,255,255,0.1);border-radius:16px;
+      padding:28px 32px;width:100%;max-width:480px;box-shadow:0 24px 60px rgba(0,0,0,0.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="color:#e8eaf0;font-size:16px;font-weight:700;margin:0;">+ New Order</h3>
+        <button id="closeNewOrderModal" style="background:none;border:none;color:rgba(255,255,255,0.4);
+          font-size:20px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Client Name / Email</label>
+          <input id="no_client" type="text" placeholder="Search client..." style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Thesis / Topic</label>
+          <input id="no_topic" type="text" placeholder="Thesis title or topic..." style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">University</label>
+          <input id="no_university" type="text" placeholder="University name..." style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Package</label>
+            <select id="no_package" style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+              border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="">Select...</option>
+              <option>Thesis Writing</option>
+              <option>Research Paper</option>
+              <option>Assignment</option>
+              <option>Dissertation</option>
+              <option>Proposal</option>
+              <option>Proofreading</option>
+              <option>SPSS Analysis</option>
+              <option>Formatting</option>
+              <option>Presentation Slides</option>
+              <option>Engineering Thesis</option>
+              <option>Handwritten Service</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Amount (৳)</label>
+            <input id="no_amount" type="number" placeholder="0" style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+              border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Deadline</label>
+          <input id="no_deadline" type="datetime-local" style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;"/>
+        </div>
+        <div>
+          <label style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Notes (optional)</label>
+          <textarea id="no_notes" rows="2" placeholder="Any special instructions..." style="width:100%;background:#0f1425;border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:13px;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
+        </div>
+        <button id="submitNewOrder" style="background:linear-gradient(135deg,#7c5cff,#9d7dff);border:none;border-radius:10px;
+          padding:11px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;margin-top:4px;">
+          Create Order
+        </button>
+        <div id="no_error" style="color:#f87171;font-size:12px;text-align:center;display:none;"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Close
+  document.getElementById('closeNewOrderModal').onclick = () => modal.style.display = 'none';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  // Submit
+  document.getElementById('submitNewOrder').onclick = async () => {
+    const btn = document.getElementById('submitNewOrder');
+    const errEl = document.getElementById('no_error');
+    const clientInput = document.getElementById('no_client').value.trim();
+    const topic = document.getElementById('no_topic').value.trim();
+    const university = document.getElementById('no_university').value.trim();
+    const pkg = document.getElementById('no_package').value;
+    const amount = document.getElementById('no_amount').value;
+    const deadline = document.getElementById('no_deadline').value;
+    const notes = document.getElementById('no_notes').value.trim();
+
+    if (!topic || !pkg || !deadline) {
+      errEl.textContent = 'Topic, Package এবং Deadline দেওয়া বাধ্যতামূলক।';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+    errEl.style.display = 'none';
+
+    const sb = window.scriptoraSupabase;
+    const orderNum = 'OPA-' + new Date().toISOString().slice(2,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*900+100);
+
+    const insertData = {
+      order_number: orderNum,
+      thesis_topic: topic,
+      university: university || null,
+      package: pkg,
+      total_amount: amount ? parseFloat(amount) : null,
+      deadline: deadline ? new Date(deadline).toISOString() : null,
+      notes: notes || null,
+      status: 'pending',
+      payment_status: 'unpaid',
+      advance_paid: 0,
+      order_date: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    };
+
+    // client match করার চেষ্টা করো
+    if (clientInput) {
+      const { data: cls } = await sb.from('clients')
+        .select('id, name, email')
+        .or(`name.ilike.%${clientInput}%,email.ilike.%${clientInput}%`)
+        .limit(1);
+      if (cls && cls.length) insertData.client_id = cls[0].id;
+    }
+
+    const { error } = await sb.from('orders').insert(insertData);
+
+    if (error) {
+      errEl.textContent = 'Error: ' + error.message;
+      errEl.style.display = 'block';
+      btn.textContent = 'Create Order';
+      btn.disabled = false;
+      return;
+    }
+
+    modal.style.display = 'none';
+    showOMToast('Order ' + orderNum + ' created!', '#22c987');
+    // Table reload
+    if (typeof loadSupabaseOrders === 'function') loadSupabaseOrders();
+  };
 }
 
 // ── INIT ──
