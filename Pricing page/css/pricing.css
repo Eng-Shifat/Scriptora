@@ -47,9 +47,9 @@ body {
   margin-bottom: 1.5rem;
 }
 .pr-trust {
-  padding: 1.5rem 2.5rem 2.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
+  padding: 1.5rem 0 2.5rem;
+  max-width: 100%;
+  margin: 0;
   border-top: 0.5px solid rgba(var(--text-rgb),0.07);
 }
 .pr-trust-grid {
@@ -195,9 +195,9 @@ body {
    PRICING WRAP
 ════════════════════════════════════════ */
 .pricing-wrap {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 2rem 7.25rem 3rem;
 }
 
 /* ═══════════════════════════════════════
@@ -713,10 +713,8 @@ body {
    TRUST BAR
 ════════════════════════════════════════ */
 .trust-bar {
-  background: rgba(var(--text-rgb),0.03);
-  border-top: 1px solid rgba(var(--text-rgb),0.07);
-  border-bottom: 1px solid rgba(var(--text-rgb),0.07);
-  padding: 0 1.5rem;
+  padding: 1rem 7.25rem;
+  overflow: hidden;
 }
 .trust-bar-inner {
   display: flex;
@@ -724,16 +722,20 @@ body {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   gap: 0;
+  background: rgba(var(--text-rgb),0.03);
+  border: 0.5px solid rgba(var(--text-rgb),0.1);
+  border-radius: 14px;
+  overflow: hidden;
 }
 .trust-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 1.2rem 1rem;
-  border-right: 1px solid rgba(var(--text-rgb),0.07);
+  border-right: 0.5px solid rgba(var(--text-rgb),0.08);
   flex: 1;
   justify-content: center;
 }

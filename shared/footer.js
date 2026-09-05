@@ -123,9 +123,9 @@
   display: grid;
   grid-template-columns: 2.2fr 1fr 1fr 1.3fr;
   gap: 3rem;
-  padding: 3.5rem 4rem;
-  max-width: 1280px;
-  margin: 0 auto;
+  padding: 3.5rem 7.25rem;
+  max-width: 100%;
+  margin: 0;
 }
 
 /* Mobile footer padding */
@@ -237,9 +237,9 @@
   margin: 0 auto;
 }
 .sc-footer-bottom {
-  padding: 1.1rem 4rem;
+  padding: 1.1rem 7.25rem;
   display: flex; justify-content: space-between; align-items: center;
-  max-width: 1280px; margin: 0 auto;
+  max-width: 100%; margin: 0;
   border-top: 0.5px solid rgba(255,255,255,0.07);
 }
 

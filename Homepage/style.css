@@ -229,7 +229,7 @@ body {
 /* -------- SERVICES -------- */
 .services-section {
   background: linear-gradient(180deg, var(--bg-main) 0%, var(--bg-gradient-alt) 100%);
-  padding: 2.5rem 7.25rem;
+  padding: 1rem 7.25rem 2.5rem;
 }
 .section-header { text-align: center; margin-bottom: 2.5rem; }
 .section-badge {
@@ -883,9 +883,9 @@ body {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.2fr;
   gap: 3rem;
-  padding: 3.5rem 4rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 3.5rem 7.25rem;
+  max-width: 100%;
+  margin: 0;
 }
 .footer-logo {
   display: inline-flex; align-items: center; gap: 10px;
@@ -911,9 +911,9 @@ body {
 .footer-contact-item { display: flex !important; align-items: center; gap: 9px; }
 .footer-bottom {
   border-top: 0.5px solid rgba(var(--text-rgb),0.07);
-  padding: 1.3rem 4rem;
+  padding: 1.3rem 7.25rem;
   display: flex; justify-content: space-between; align-items: center;
-  max-width: 1200px; margin: 0 auto;
+  max-width: 100%; margin: 0;
 }
 .footer-bottom-left { font-size: 12.5px; color: rgba(var(--text-rgb),0.3); }
 .footer-bottom-right { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: rgba(var(--text-rgb),0.3); }
@@ -1190,11 +1190,11 @@ body {
 ══════════════════════════════════════════════ */
 .uni-trust-section {
   background: var(--bg-main);
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 7.25rem 4rem;
 }
 .uni-trust-inner {
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1549,7 +1549,7 @@ body {
 
   /* Bottom stats */
   .bottom-stats {
-    padding: clamp(2.2rem, 3vw, 3.5rem) clamp(2.5rem, 7vw, 10rem);
+    padding: 2.2rem 7.25rem;
   }
 
   /* Services */
@@ -1564,8 +1564,8 @@ body {
 
   /* Trust bar */
   .trust-bar {
-    max-width: clamp(1150px, 82vw, 1550px);
-    padding: clamp(1.4rem, 2vw, 2.5rem) clamp(2rem, 3vw, 4rem);
+    max-width: 100%;
+    padding: 1.4rem 2rem;
   }
 
   /* Why Choose Us */
@@ -1590,7 +1590,7 @@ body {
 
   /* CTA */
   .cta-section {
-    padding: clamp(5rem, 6vw, 9rem) clamp(2.5rem, 7vw, 10rem);
+    padding: 3.5rem 7.25rem;
   }
 
   /* Footer */
@@ -1605,7 +1605,7 @@ body {
 
   /* Uni Trust */
   .uni-trust-section {
-    padding: clamp(2rem, 3vw, 4rem) clamp(2.5rem, 7vw, 10rem) clamp(4rem, 5vw, 7rem);
+    padding: 3.5rem 7.25rem;
   }
   .uni-trust-inner {
     max-width: clamp(1100px, 82vw, 1550px);
