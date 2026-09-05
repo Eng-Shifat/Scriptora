@@ -951,14 +951,16 @@ function validate() {
   return null;
 }
 
-/* ── Upload file to Supabase Storage ───────────────────── */
+/* ── Upload file to Supabase Storage (private bucket) ─────
+   Returns the storage PATH (not a public URL) — affiliate-docs
+   is a private bucket since NID/photo are sensitive. Admin
+   views these later via a short-lived signed URL. ────────── */
 async function uploadFile(bucket, file, path) {
-  const { data, error } = await window._supabase.storage
+  const { error } = await window._supabase.storage
     .from(bucket)
     .upload(path, file, { upsert: false });
   if (error) throw new Error('File upload failed: ' + error.message);
-  const { data: urlData } = window._supabase.storage.from(bucket).getPublicUrl(path);
-  return urlData.publicUrl;
+  return path;
 }
 
 /* ── Form submit ─────────────────────────────────────────── */
@@ -977,16 +979,17 @@ document.getElementById('affForm').addEventListener('submit', async function(e) 
     const supabase = window._supabase;
     const ts = Date.now();
 
+    /* Need the user id first so uploads land under the client's own
+       folder (storage RLS is keyed on the first path segment). */
+    const { data: { user } } = await window._supabase.auth.getUser();
+    if (!user) throw new Error("Login করুন — session নেই।");
+
     /* Upload files */
     const nidFile   = document.getElementById('f_nid_photo').files[0];
     const photoFile = document.getElementById('f_photo').files[0];
 
-    const nidUrl   = await uploadFile('affiliate-docs', nidFile,   `nid/${ts}_${nidFile.name}`);
-    const photoUrl = await uploadFile('affiliate-docs', photoFile, `photo/${ts}_${photoFile.name}`);
-
-    /* Insert application row */
-    const { data: { user } } = await window._supabase.auth.getUser();
-    if (!user) throw new Error("Login করুন — session নেই।");
+    const nidPath   = await uploadFile('affiliate-docs', nidFile,   `${user.id}/nid/${ts}_${nidFile.name}`);
+    const photoPath = await uploadFile('affiliate-docs', photoFile, `${user.id}/photo/${ts}_${photoFile.name}`);
 
     const payload = {
       client_id: user.id,
@@ -999,8 +1002,8 @@ document.getElementById('affForm').addEventListener('submit', async function(e) 
       payment_method:   document.getElementById('f_payment_method').value,
       payment_number:   document.getElementById('f_payment_number').value.trim(),
       nid_number:       document.getElementById('f_nid_number').value.trim(),
-      nid_photo_url:    nidUrl,
-      photo_url:        photoUrl,
+      nid_photo_path:   nidPath,
+      photo_path:       photoPath,
       skills:           selectedSkills,
       preferred_services: selectedServices,
       referrer_code:    document.getElementById('f_referrer_code').value.trim() || null,

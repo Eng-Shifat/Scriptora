@@ -133,7 +133,10 @@ async function loadApplications() {
   try {
     const { data: apps, error: appErr } = await sb
       .from('affiliate_applications')
-      .select('id, client_id, status, applied_at, reviewed_at, admin_note')
+      .select(`id, client_id, status, applied_at, reviewed_at, admin_note,
+                full_name, university, phone, whatsapp, email, facebook_url,
+                payment_method, payment_number, nid_number, nid_photo_path, photo_path,
+                skills, preferred_services, referrer_code, about_self`)
       .order('applied_at', { ascending: false });
 
     if (appErr) throw appErr;
@@ -247,6 +250,123 @@ function buildAppRow(app) {
       <td style="font-size:.78rem;">${adminNote}</td>
       <td onclick="event.stopPropagation()">${actions}</td>
     </tr>`;
+}
+
+/* ── Applicant Biodata Profile Modal ─────────────────────────
+   Shows the full application (contact, payment, NID, skills,
+   services, about) so admin can review a client before
+   approving/rejecting — without leaving the Applications tab. */
+window.affProfileOpen = async function(appId) {
+  const app = ALL_APPLICATIONS.find(a => a.id === appId);
+  if (!app) return;
+  const client = CLIENT_MAP[app.client_id] || {};
+
+  ensureAffProfileModal();
+  const modal = document.getElementById('affProfileModal');
+  modal.style.display = 'flex';
+  document.getElementById('affProfileBody').innerHTML = `
+    <div style="text-align:center;padding:40px 0;color:var(--muted2);">
+      <i class="ti ti-loader-2" style="font-size:1.6rem;animation:spin 1s linear infinite;"></i>
+    </div>`;
+
+  const sb = window.scriptoraSupabase;
+  let nidUrl = null, photoUrl = null;
+  try {
+    if (app.nid_photo_path) {
+      const { data } = await sb.storage.from('affiliate-docs').createSignedUrl(app.nid_photo_path, 300);
+      nidUrl = data?.signedUrl || null;
+    }
+    if (app.photo_path) {
+      const { data } = await sb.storage.from('affiliate-docs').createSignedUrl(app.photo_path, 300);
+      photoUrl = data?.signedUrl || null;
+    }
+  } catch (e) { console.error('signed url error:', e); }
+
+  const skills   = Array.isArray(app.skills) ? app.skills : [];
+  const services = Array.isArray(app.preferred_services) ? app.preferred_services : [];
+  const tagList  = (arr, color) => arr.length
+    ? arr.map(s => `<span style="display:inline-block;background:${color}22;color:${color};border:1px solid ${color}55;border-radius:6px;padding:3px 10px;font-size:.75rem;font-weight:600;margin:2px 4px 2px 0;">${esc(s)}</span>`).join('')
+    : '<span style="color:var(--muted)">—</span>';
+
+  const row = (label, value) => `
+    <div style="display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+      <span style="color:var(--muted2);font-size:.78rem;">${label}</span>
+      <span style="font-size:.82rem;font-weight:600;text-align:right;">${value}</span>
+    </div>`;
+
+  const name = app.full_name || client.name || '—';
+
+  document.getElementById('affProfileBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+      ${photoUrl
+        ? `<img src="${photoUrl}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.1);"/>`
+        : esAvatarHtml(name, client.avatar_url, stringToColor(app.client_id), name.slice(0,2).toUpperCase())}
+      <div>
+        <div style="font-size:1.05rem;font-weight:800;">${esc(name)}</div>
+        <div style="font-size:.78rem;color:var(--muted2);">${esc(app.university || '—')}</div>
+        <div style="margin-top:4px;">${buildStatusBadge(app.status)}</div>
+      </div>
+    </div>
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Contact</div>
+    ${row('Phone', esc(app.phone || '—'))}
+    ${row('WhatsApp', esc(app.whatsapp || '—'))}
+    ${row('Email', esc(app.email || client.email || '—'))}
+    ${row('Facebook', app.facebook_url ? `<a href="${esc(app.facebook_url)}" target="_blank" style="color:#60a5fa;">প্রোফাইল</a>` : '—')}
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Payment</div>
+    ${row('Method', esc((app.payment_method || '—').toUpperCase()))}
+    ${row('Number', esc(app.payment_number || '—'))}
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Identity Verification</div>
+    ${row('NID Number', esc(app.nid_number || '—'))}
+    ${row('NID Photo', nidUrl ? `<a href="${nidUrl}" target="_blank" style="color:#60a5fa;">দেখুন ↗</a>` : '<span style="color:var(--muted)">—</span>')}
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Marketing Skills</div>
+    <div>${tagList(skills, '#60a5fa')}</div>
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Preferred Services</div>
+    <div>${tagList(services, '#34d399')}</div>
+
+    ${app.referrer_code ? `
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">Referred By</div>
+    ${row('Code', esc(app.referrer_code))}` : ''}
+
+    <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 6px;">About</div>
+    <p style="font-size:.83rem;line-height:1.7;color:rgba(255,255,255,.75);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">${esc(app.about_self || '—')}</p>
+
+    ${app.status === 'pending' ? `
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button onclick="closeAffProfileModal();confirmApprove('${app.id}')" style="flex:1;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#2d6ef7,#3b82f6);color:#fff;font-weight:700;font-size:.85rem;cursor:pointer;">✓ Approve</button>
+      <button onclick="closeAffProfileModal();confirmReject('${app.id}')" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#f87171;font-weight:700;font-size:.85rem;cursor:pointer;">✕ Reject</button>
+    </div>` : ''}
+  `;
+};
+
+window.closeAffProfileModal = function() {
+  const modal = document.getElementById('affProfileModal');
+  if (modal) modal.style.display = 'none';
+};
+
+function ensureAffProfileModal() {
+  if (document.getElementById('affProfileModal')) return;
+  if (!document.getElementById('affProfileSpinKeyframe')) {
+    const style = document.createElement('style');
+    style.id = 'affProfileSpinKeyframe';
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  const div = document.createElement('div');
+  div.id = 'affProfileModal';
+  div.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;';
+  div.innerHTML = `
+    <div onclick="closeAffProfileModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:560px;background:var(--bg-card,#111e3f);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:28px 30px;box-shadow:0 24px 80px rgba(0,0,0,.5);">
+      <button onclick="closeAffProfileModal()" style="position:absolute;top:18px;right:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:32px;height:32px;color:rgba(255,255,255,.6);cursor:pointer;font-size:1.05rem;">&times;</button>
+      <div id="affProfileBody"></div>
+    </div>`;
+  document.body.appendChild(div);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAffProfileModal(); });
 }
 
 function buildStatusBadge(status) {

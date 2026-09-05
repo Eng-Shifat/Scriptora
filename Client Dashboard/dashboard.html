@@ -3267,13 +3267,15 @@ function mShowError(msg) {
 }
 function mHideError() { document.getElementById('mErrorBanner').style.display = 'none'; }
 
-/* ── Upload file to Supabase Storage ────────────────── */
+/* ── Upload file to Supabase Storage (private bucket) ─
+   Returns the storage PATH (not a public URL, since the
+   affiliate-docs bucket is private — NID/photo are sensitive).
+   Admin views these later via a short-lived signed URL. ── */
 async function mUploadFile(bucket, file, path) {
   const sb = window._supabase || window.scriptoraSupabase;
-  const { data, error } = await sb.storage.from(bucket).upload(path, file, { upsert: false });
+  const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: false });
   if (error) throw new Error('File upload failed: ' + error.message);
-  const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
-  return urlData.publicUrl;
+  return path;
 }
 
 /* ── Submit ─────────────────────────────────────────── */
@@ -3289,14 +3291,17 @@ document.getElementById('affModalForm').addEventListener('submit', async functio
 
   try {
     const sb = window._supabase || window.scriptoraSupabase;
-    const ts = Date.now();
-    const nidFile   = document.getElementById('m_nid_photo').files[0];
-    const photoFile = document.getElementById('m_photo').files[0];
-    const nidUrl    = await mUploadFile('affiliate-docs', nidFile,   `nid/${ts}_${nidFile.name}`);
-    const photoUrl  = await mUploadFile('affiliate-docs', photoFile, `photo/${ts}_${photoFile.name}`);
 
     const { data: { user } } = await sb.auth.getUser();
     if (!user) throw new Error('Login করুন — session নেই।');
+
+    const ts = Date.now();
+    const nidFile   = document.getElementById('m_nid_photo').files[0];
+    const photoFile = document.getElementById('m_photo').files[0];
+    /* Path is namespaced under the client's own auth uid so storage
+       RLS can allow each client to write/read only their own folder. */
+    const nidPath   = await mUploadFile('affiliate-docs', nidFile,   `${user.id}/nid/${ts}_${nidFile.name}`);
+    const photoPath = await mUploadFile('affiliate-docs', photoFile, `${user.id}/photo/${ts}_${photoFile.name}`);
 
     const v = id => document.getElementById(id).value.trim();
     const payload = {
@@ -3310,8 +3315,8 @@ document.getElementById('affModalForm').addEventListener('submit', async functio
       payment_method:     v('m_payment_method'),
       payment_number:     v('m_payment_number'),
       nid_number:         v('m_nid_number'),
-      nid_photo_url:      nidUrl,
-      photo_url:          photoUrl,
+      nid_photo_path:     nidPath,
+      photo_path:         photoPath,
       skills:             mSelectedSkills,
       preferred_services: mSelectedServices,
       referrer_code:      v('m_referrer_code') || null,
