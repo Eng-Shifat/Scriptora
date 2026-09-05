@@ -414,25 +414,42 @@ window.affProfileOpen = async function(appId) {
 
   // Load data
   try {
-    const { data, error } = await window._supabase
+    const sb = window.scriptoraSupabase || window._supabase;
+    const { data, error } = await sb
       .from('affiliate_applications')
       .select('*')
       .eq('id', appId)
       .single();
 
     if (error || !data) throw new Error(error?.message || 'Not found');
-    _populateProfile(data);
+    await _populateProfile(data);
   } catch (e) {
     if (typeof showToast === 'function') showToast('Profile load করতে সমস্যা হয়েছে', 'error');
   }
 };
 
 /* ── Populate ───────────────────────────────────────────── */
-function _populateProfile(d) {
+async function _populateProfile(d) {
+  const sb = window.scriptoraSupabase || window._supabase;
+
+  // Signed URLs for the private affiliate-docs bucket (photo/NID paths,
+  // not public URLs — see dashboard.html apply form / migration notes)
+  let photoUrl = null, nidPhotoUrl = null;
+  try {
+    if (d.photo_path) {
+      const { data } = await sb.storage.from('affiliate-docs').createSignedUrl(d.photo_path, 300);
+      photoUrl = data?.signedUrl || null;
+    }
+    if (d.nid_photo_path) {
+      const { data } = await sb.storage.from('affiliate-docs').createSignedUrl(d.nid_photo_path, 300);
+      nidPhotoUrl = data?.signedUrl || null;
+    }
+  } catch (e) { console.error('[affProfile] signed url error:', e); }
+
   // Avatar
   const avatarWrap = document.getElementById('afpAvatarWrap');
-  if (d.photo_url) {
-    avatarWrap.innerHTML = `<img class="afp-avatar" src="${_esc(d.photo_url)}" alt="Photo" onerror="this.style.display='none'"/>`;
+  if (photoUrl) {
+    avatarWrap.innerHTML = `<img class="afp-avatar" src="${_esc(photoUrl)}" alt="Photo" onerror="this.style.display='none'"/>`;
   } else {
     const initials = (d.full_name || '?').slice(0, 2).toUpperCase();
     document.getElementById('afpAvatarFallback').textContent = initials;
@@ -461,7 +478,7 @@ function _populateProfile(d) {
   badge.textContent = statusLabels[d.status] || d.status;
 
   // Applied at
-  const at = d.created_at ? new Date(d.created_at).toLocaleString('bn-BD') : '—';
+  const at = d.applied_at ? new Date(d.applied_at).toLocaleString('bn-BD') : '—';
   document.getElementById('afpAppliedAt').textContent = `Applied: ${at}`;
 
   // Payment
@@ -475,8 +492,8 @@ function _populateProfile(d) {
   // NID photo
   const nidWrap = document.getElementById('afpNidPhotoWrap');
   const nidNA   = document.getElementById('afpNidPhotoNA');
-  if (d.nid_photo_url) {
-    document.getElementById('afpNidPhoto').src = d.nid_photo_url;
+  if (nidPhotoUrl) {
+    document.getElementById('afpNidPhoto').src = nidPhotoUrl;
     nidWrap.style.display = '';
     nidNA.style.display   = 'none';
   } else {
@@ -562,10 +579,10 @@ window.affProfileAction = async function(action) {
   approveBtn.disabled = rejectBtn.disabled = confirmBtn.disabled = true;
 
   try {
-    const supabase = window._supabase;
+    const supabase = window.scriptoraSupabase || window._supabase;
 
     if (action === 'approve') {
-      const { error } = await supabase.rpc('approve_affiliate_application', { app_id: _currentAffId });
+      const { error } = await supabase.rpc('approve_affiliate_application', { p_application_id: _currentAffId });
       if (error) throw new Error(error.message);
       if (typeof showToast === 'function') showToast('Affiliate approve হয়েছে ✅', 'success');
     } else {
