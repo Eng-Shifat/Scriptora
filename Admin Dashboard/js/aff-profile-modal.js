@@ -412,6 +412,10 @@ window.affProfileOpen = async function(appId) {
   document.getElementById('afpConfirmRejectBtn').style.display = 'none';
   document.getElementById('afpNoteInput').value = '';
 
+  // Reset visible fields to placeholders immediately so the previous
+  // applicant's data never lingers on screen while the new one loads.
+  _resetProfileFields();
+
   // Load data
   try {
     const sb = window.scriptoraSupabase || window._supabase;
@@ -421,15 +425,40 @@ window.affProfileOpen = async function(appId) {
       .eq('id', appId)
       .single();
 
+    // Guard: if the admin already clicked a different row while this
+    // fetch was in flight, _currentAffId has moved on — drop this
+    // stale result instead of overwriting the newer row's data.
+    if (_currentAffId !== appId) return;
+
     if (error || !data) throw new Error(error?.message || 'Not found');
-    await _populateProfile(data);
+    await _populateProfile(data, appId);
   } catch (e) {
-    if (typeof showToast === 'function') showToast('Profile load করতে সমস্যা হয়েছে', 'error');
+    if (_currentAffId === appId && typeof showToast === 'function') {
+      showToast('Profile load করতে সমস্যা হয়েছে', 'error');
+    }
   }
 };
 
+/* ── Reset fields to loading placeholders ─────────────────── */
+function _resetProfileFields() {
+  document.getElementById('afpAvatarWrap').innerHTML = `<div class="afp-avatar-fallback" id="afpAvatarFallback">??</div>`;
+  ['afpName','afpUni','afpEmail','afpPhone','afpWhatsapp','afpNidNum','afpAbout','afpFacebook','afpPayMethod','afpPayNumber'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  document.getElementById('afpAppliedAt').textContent = '—';
+  const badge = document.getElementById('afpStatusBadge');
+  badge.className = 'afp-status-badge pending';
+  badge.textContent = '…';
+  document.getElementById('afpNidPhotoWrap').style.display = 'none';
+  document.getElementById('afpNidPhotoNA').style.display = '';
+  document.getElementById('afpSkills').innerHTML = '';
+  document.getElementById('afpServices').innerHTML = '';
+  document.getElementById('afpRefSection').style.display = 'none';
+}
+
 /* ── Populate ───────────────────────────────────────────── */
-async function _populateProfile(d) {
+async function _populateProfile(d, requestedId) {
   const sb = window.scriptoraSupabase || window._supabase;
 
   // Signed URLs for the private affiliate-docs bucket (photo/NID paths,
@@ -445,6 +474,10 @@ async function _populateProfile(d) {
       nidPhotoUrl = data?.signedUrl || null;
     }
   } catch (e) { console.error('[affProfile] signed url error:', e); }
+
+  // Re-check after the signed-url round trips too — another click may
+  // have landed while we were awaiting those.
+  if (requestedId !== undefined && _currentAffId !== requestedId) return;
 
   // Avatar
   const avatarWrap = document.getElementById('afpAvatarWrap');
