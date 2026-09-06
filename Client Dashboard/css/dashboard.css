@@ -2052,6 +2052,20 @@ input, select, textarea { font-family: inherit; }
   .mbn-item svg {
     stroke: currentColor;
   }
+  /* Affiliate tab — green accent when active */
+  .mbn-item.mbn-affiliate.active {
+    color: #34d399;
+  }
+  /* When affiliate tab is visible, all 6 items get slightly tighter */
+  .mobile-bottom-nav.has-affiliate .mbn-item {
+    font-size: 9px;
+    padding: 5px 0;
+    gap: 2px;
+  }
+  .mobile-bottom-nav.has-affiliate .mbn-item svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* ═══════════════════════════════════════════

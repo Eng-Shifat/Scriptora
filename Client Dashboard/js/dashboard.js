@@ -1694,6 +1694,15 @@ async function loadAffiliateState(force = false) {
       _currentAffiliateId = aff.id;
       show('aff-approved');
       _affStateLoaded = true;
+
+      /* Show affiliate tab in mobile bottom nav */
+      const mbnAff = document.getElementById('mbnAffiliateTab');
+      if (mbnAff) {
+        mbnAff.style.display = 'flex';
+        const nav = mbnAff.closest('.mobile-bottom-nav');
+        if (nav) nav.classList.add('has-affiliate');
+      }
+
       loadAffiliateEarnings(aff.id);
       loadAffiliateWithdrawals(aff.id);
       loadAffiliateMyReferrals(); /* Phase 18 */
@@ -1862,13 +1871,23 @@ function affiliateGenerateQr(url) {
     return;
   }
 
+  /* Prevent duplicate generation — if already rendered, skip */
+  if (box.querySelector('img')) return;
+  /* Mark as in-progress to block concurrent calls */
+  if (box.dataset.qrPending === '1') return;
+  box.dataset.qrPending = '1';
+
   function tryGenerate(attemptsLeft) {
     if (typeof QRCode === 'undefined') {
-      if (attemptsLeft > 0) setTimeout(() => tryGenerate(attemptsLeft - 1), 300);
-      else console.error('[Affiliate] QRCode library not loaded');
+      if (attemptsLeft > 0) setTimeout(() => tryGenerate(attemptsLeft - 1), 400);
+      else {
+        box.dataset.qrPending = '0';
+        console.warn('[Affiliate] QRCode library not loaded — QR skipped');
+      }
       return;
     }
     QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark: '#000000', light: '#ffffff' } }, (err, dataUrl) => {
+      box.dataset.qrPending = '0';
       if (err) { console.error('[Affiliate] QR generation error:', err); return; }
       box.innerHTML = '';
       const img = document.createElement('img');
@@ -1878,7 +1897,7 @@ function affiliateGenerateQr(url) {
     });
   }
 
-  tryGenerate(10);
+  tryGenerate(20);
 }
 
 function affiliateDownloadQr() {
