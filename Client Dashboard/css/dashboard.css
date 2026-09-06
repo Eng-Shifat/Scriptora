@@ -4889,16 +4889,96 @@ input, select, textarea { font-family: inherit; }
   .affd-earn-wrapper { padding: 12px; }
 }
 @media (max-width: 680px) {
-  .affd-banner { flex-direction: column; align-items: flex-start; text-align: left; padding: 18px; }
-  .affd-banner-art { align-self: center; }
+  /* Banner: horizontal layout, art hidden on small */
+  .affd-banner {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .affd-banner-art { display: none; }
+  .affd-banner-text { max-width: 100%; }
+  .affd-banner-hi { font-size: 13px; }
+  .affd-banner-sub { font-size: 11px; }
+
+  /* Tier card: horizontal compact layout */
+  #affTierPanel {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .affd-tier-head { gap: 10px; }
+  .affd-tier-badge { width: 52px; height: 52px; }
+  .affd-tier-badge svg { width: 52px; height: 52px; }
+  .affd-tier-name { font-size: 16px; }
+  .affd-tier-rate { font-size: 20px; }
+
+  /* QR row: horizontal on mobile */
+  .aff-share-qrrow {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0 0 0;
+  }
+  .aff-share-qrbox { width: 64px; height: 64px; }
+
+  /* Referral code */
+  .affd-code { font-size: 17px; letter-spacing: 2px; }
+
+  /* Share buttons: wrap nicely */
+  .aff-share-btnrow { gap: 6px; }
+  .aff-share-btn { font-size: 12px; padding: 7px 10px; }
+
+  /* Promo card: compact */
+  .affd-promo-card { flex-wrap: nowrap; gap: 10px; padding: 10px 12px; }
+  .affd-promo-btn { padding: 6px 10px; font-size: 11px; }
+
   .affd-form-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
+  .affd-wrap { gap: 6px; }
+
+  /* Banner: even more compact */
+  .affd-banner { padding: 12px 14px; border-radius: 12px; }
+  .affd-banner-hi { font-size: 12.5px; }
+
+  /* Tier card inlined */
+  .affd-tier-head { gap: 8px; }
+  .affd-tier-badge { width: 46px; height: 46px; }
+  .affd-tier-badge svg { width: 46px; height: 46px; }
+  .affd-tier-sub { font-size: 9.5px; }
+  .affd-tier-name { font-size: 15px; }
+  .affd-tier-rate { font-size: 18px; }
+
+  /* Approval alert: tighter */
+  .affd-alert { padding: 9px 12px; gap: 10px; }
+  .affd-alert-title { font-size: 12px; }
+  .affd-alert-sub { font-size: 10.5px; }
+
+  /* Referral card */
+  .affd-card { padding: 10px; border-radius: 10px; }
+  .affd-code { font-size: 16px; letter-spacing: 1.8px; }
+  .aff-share-linkinput { font-size: 11px; }
+  .aff-share-iconbtn { padding: 6px 10px; font-size: 11px; }
+
+  /* Share buttons: two per row */
+  .aff-share-btnrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .aff-share-btn { justify-content: center; font-size: 11.5px; padding: 8px 6px; }
+
+  /* QR compact */
+  .aff-share-qrbox { width: 56px; height: 56px; }
+  .aff-share-qrdl { font-size: 10px; padding: 5px 10px; }
+
+  /* Earnings + analytics */
   .affd-earnings-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .affd-analytics-grid { grid-template-columns: repeat(2, 1fr); }
-  .affd-earn-val { font-size: 18px; }
-  .affd-code { font-size: 18px; letter-spacing: 2px; }
-  .affd-protip { flex-direction: column; align-items: flex-start; }
+  .affd-earn-val { font-size: 16px; }
+  .affd-earn-lbl { font-size: 8.5px; }
+
+  /* Section labels */
+  .affd-section-label { font-size: 10px; }
+
+  .affd-protip { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 14px; }
+  .affd-protip-btn { width: 100%; text-align: center; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
