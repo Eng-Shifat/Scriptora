@@ -1666,6 +1666,7 @@ function initNav() {
 /* ── AFFILIATE STATE ─────────────────────────────────────────── */
 let _affStateLoaded = false; /* একবার load হলে আর reload দরকার নেই, unless forced */
 let _currentAffiliateId = null;
+let _affiliateTotalWithdrawn = null; /* set by loadAffiliateWithdrawals, read by pending_clearance */
 
 async function loadAffiliateState(force = false) {
   if (_affStateLoaded && !force) return;
@@ -2002,23 +2003,30 @@ async function loadAffiliateEarnings(affiliateId) {
 
     if (error) throw error;
 
-    /* ── Recalculate pending_clearance from live commission data ──────────
-       pending_clearance = sum of proportional commission for orders whose
-       commission_status is 'pending' (order not yet completed/fully paid).
-       'earned' commissions must NEVER appear here — they are already in
-       available_balance. This corrects any RPC miscalculation.            */
-    if (clearanceEl && comms) {
-      const truePendingClearance = comms
-        .filter(c => c.commission_status === 'pending')
-        .reduce((sum, c) => {
-          const totalAmt = Number(c.total_amount  || 0);
-          const paidAmt  = Number(c.paid_amount   || 0);
-          const commAmt  = Number(c.commission_amount || 0);
-          /* Proportional: only the portion the client has actually paid */
-          const proportional = totalAmt > 0 ? (commAmt * paidAmt / totalAmt) : 0;
-          return sum + proportional;
-        }, 0);
-      clearanceEl.textContent = fmt(truePendingClearance);
+    /* ── Pending clearance — provisional value using wallet arithmetic ─────
+       Store wallet fields as data-attrs so loadAffiliateWithdrawals can
+       overwrite this with a precise value once total_withdrawn is known.
+       Provisional formula: total_earned - available - pending_withdrawal
+       (ignores total_withdrawn — will be corrected below after withdrawals load). */
+    if (clearanceEl) {
+      const wTotalEarned = Number(wallet.total_earned       || 0);
+      const wAvailable   = Number(wallet.available_balance  || 0);
+      const wPendingWd   = Number(wallet.pending_withdrawal || 0);
+
+      /* Store on element for use by loadAffiliateWithdrawals */
+      clearanceEl.dataset.walletTotalEarned = wTotalEarned;
+      clearanceEl.dataset.walletAvailable   = wAvailable;
+      clearanceEl.dataset.walletPendingWd   = wPendingWd;
+
+      if (_affiliateTotalWithdrawn !== null) {
+        /* loadAffiliateWithdrawals already ran — use the exact value */
+        clearanceEl.textContent = fmt(Math.max(0,
+          wTotalEarned - wAvailable - _affiliateTotalWithdrawn - wPendingWd
+        ));
+      } else {
+        /* Provisional until withdrawals load — show '…' */
+        clearanceEl.textContent = '…';
+      }
     }
 
     /* Show/hide withdrawal form based on balance & pending requests */
@@ -2167,11 +2175,28 @@ async function loadAffiliateWithdrawals(affiliateId) {
        the withdrawal rows already fetched above (status = paid), no new
        query or business logic added. */
     const totalWithdrawnEl = document.getElementById('affTotalWithdrawn');
+    const paidSum = (rows || []).filter(w => w.status === 'paid')
+      .reduce((sum, w) => sum + Number(w.amount || 0), 0);
+    _affiliateTotalWithdrawn = paidSum; /* share with pending_clearance recalc */
     if (totalWithdrawnEl) {
-      const paidSum = (rows || []).filter(w => w.status === 'paid')
-        .reduce((sum, w) => sum + Number(w.amount || 0), 0);
       totalWithdrawnEl.textContent = '৳' + paidSum.toLocaleString('en-IN', { minimumFractionDigits: 2 });
       setTimeout(() => drawEarningSparkline('sparkWithdrawn', '#a78bfa'), 50);
+    }
+
+    /* ── Re-render pending_clearance now that total_withdrawn is confirmed ──
+       loadAffiliateEarnings runs concurrently and may have used a fallback.
+       Now we have the exact paid sum, so overwrite with the correct value.  */
+    const clearanceEl2 = document.getElementById('affPendingClearance');
+    if (clearanceEl2) {
+      const walletEarned  = parseFloat(clearanceEl2.dataset.walletTotalEarned  || '0');
+      const walletAvail   = parseFloat(clearanceEl2.dataset.walletAvailable    || '0');
+      const walletPendWd  = parseFloat(clearanceEl2.dataset.walletPendingWd    || '0');
+      if (walletEarned > 0) {
+        /* wallet data was stored on the element — use precise arithmetic */
+        const fmt2 = n => '৳' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const correctClearance = Math.max(0, walletEarned - walletAvail - paidSum - walletPendWd);
+        clearanceEl2.textContent = fmt2(correctClearance);
+      }
     }
 
     if (!rows || rows.length === 0) {
