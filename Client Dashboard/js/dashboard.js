@@ -1987,7 +1987,8 @@ async function loadAffiliateEarnings(affiliateId) {
     }
 
     if (pendingEl)   pendingEl.textContent   = fmt(wallet.pending_withdrawal);
-    if (clearanceEl) clearanceEl.textContent = fmt(wallet.pending_clearance);
+    /* pending_clearance will be recalculated accurately from commission data below */
+    if (clearanceEl) clearanceEl.textContent = '…';
 
     // Draw sparklines after values are set
     setTimeout(initEarningSparklines, 50);
@@ -2000,6 +2001,25 @@ async function loadAffiliateEarnings(affiliateId) {
     const { data: comms, error } = await sb.rpc('get_my_affiliate_commissions');
 
     if (error) throw error;
+
+    /* ── Recalculate pending_clearance from live commission data ──────────
+       pending_clearance = sum of proportional commission for orders whose
+       commission_status is 'pending' (order not yet completed/fully paid).
+       'earned' commissions must NEVER appear here — they are already in
+       available_balance. This corrects any RPC miscalculation.            */
+    if (clearanceEl && comms) {
+      const truePendingClearance = comms
+        .filter(c => c.commission_status === 'pending')
+        .reduce((sum, c) => {
+          const totalAmt = Number(c.total_amount  || 0);
+          const paidAmt  = Number(c.paid_amount   || 0);
+          const commAmt  = Number(c.commission_amount || 0);
+          /* Proportional: only the portion the client has actually paid */
+          const proportional = totalAmt > 0 ? (commAmt * paidAmt / totalAmt) : 0;
+          return sum + proportional;
+        }, 0);
+      clearanceEl.textContent = fmt(truePendingClearance);
+    }
 
     /* Show/hide withdrawal form based on balance & pending requests */
     const { data: openReq } = await sb
@@ -3942,8 +3962,15 @@ async function loadAffiliateReferredOrders() {
     tbody.innerHTML = rows.map(c => {
       const orderNum  = c.order_number || c.order_id?.slice(0, 8).toUpperCase() || '—';
       const oSt       = orderStatusMap[c.order_status] || { color: '#94a3b8', label: c.order_status || '—', pct: 0 };
-      const pct       = oSt.pct;
       const commAmt   = Number(c.commission_amount || 0);
+
+      /* Real progress: use paid_amount / total_amount if available,
+         fall back to status-based pct only when payment data is missing. */
+      const totalAmt = Number(c.total_amount || 0);
+      const paidAmt  = Number(c.paid_amount  || 0);
+      const pct = totalAmt > 0
+        ? Math.min(100, Math.round(paidAmt / totalAmt * 100))
+        : oSt.pct;
 
       const commDisplay = c.commission_status === 'earned'
         ? `<span style="color:#34d399;font-weight:700;">${fmtAmt(commAmt)}</span>`
@@ -3968,16 +3995,21 @@ async function loadAffiliateReferredOrders() {
     /* MOBILE CARDS */
     if (cards) {
       cards.innerHTML = rows.map(c => {
-        const orderNum = c.order_number || c.order_id?.slice(0, 8).toUpperCase() || '—';
-        const oSt      = orderStatusMap[c.order_status] || { color: '#94a3b8', label: c.order_status || '—', pct: 0 };
-        const commAmt  = Number(c.commission_amount || 0);
+        const orderNum  = c.order_number || c.order_id?.slice(0, 8).toUpperCase() || '—';
+        const oSt       = orderStatusMap[c.order_status] || { color: '#94a3b8', label: c.order_status || '—', pct: 0 };
+        const commAmt   = Number(c.commission_amount || 0);
+        const mTotalAmt = Number(c.total_amount || 0);
+        const mPaidAmt  = Number(c.paid_amount  || 0);
+        const mPct      = mTotalAmt > 0
+          ? Math.min(100, Math.round(mPaidAmt / mTotalAmt * 100))
+          : oSt.pct;
         return `
           <div class="affd-order-mobile-card">
             <div class="affd-omc-header">
               <span class="affd-omc-num">${escHtml(orderNum)}</span>
               <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:${oSt.color}20;color:${oSt.color};">${escHtml(oSt.label)}</span>
             </div>
-            <div class="affd-omc-progress">${buildProgressBar(oSt.pct, oSt.color)}</div>
+            <div class="affd-omc-progress">${buildProgressBar(mPct, oSt.color)}</div>
             <div class="affd-omc-footer">
               <span style="font-size:11px;color:var(--text-muted);">${fmtDate(c.created_at)}</span>
               <span style="font-size:13px;font-weight:700;color:${
