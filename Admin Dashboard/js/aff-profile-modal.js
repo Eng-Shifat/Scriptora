@@ -394,7 +394,9 @@
 })();
 
 /* ── State ──────────────────────────────────────────────── */
-let _currentAffId = null;
+let _currentAffId   = null;
+let _currentAppData = null; /* full row of the open application — used
+                                by approve/reject to fire notifications */
 
 /* ── Open profile ───────────────────────────────────────── */
 window.affProfileOpen = async function(appId) {
@@ -410,6 +412,7 @@ window.affProfileOpen = async function(appId) {
   // Reset visible fields to placeholders immediately so the previous
   // applicant's data never lingers on screen while the new one loads.
   _resetProfileFields();
+  _currentAppData = null;
 
   // Load data
   try {
@@ -473,6 +476,7 @@ async function _populateProfile(d, requestedId) {
   // have landed while we were awaiting those.
   if (requestedId !== undefined && _currentAffId !== requestedId) return;
 
+  _currentAppData = d;
   // Avatar
   const avatarWrap = document.getElementById('afpAvatarWrap');
   if (photoUrl) {
@@ -595,9 +599,34 @@ window.affProfileAction = async function(action) {
     const supabase = window.scriptoraSupabase || window._supabase;
 
     if (action === 'approve') {
-      const { error } = await supabase.rpc('approve_affiliate_application', { p_application_id: _currentAffId });
+      const { data, error } = await supabase.rpc('approve_affiliate_application', { p_application_id: _currentAffId });
       if (error) throw new Error(error.message);
+      if (data?.success === false) throw new Error(data.message || 'Approval failed');
+
       if (typeof showToast === 'function') showToast('Affiliate approve হয়েছে ✅', 'success');
+
+      if (typeof logAudit === 'function') {
+        logAudit('application_approved', {
+          affiliateId: data?.affiliate_id || null,
+          targetTable: 'affiliate_applications',
+          targetId: _currentAffId,
+          details: { referral_code: data?.referral_code || null }
+        });
+      }
+      /* Notify the client — this was previously missing from this
+         modal's approve path, so approvals here never reached the
+         client even though the row-level Approve button did. */
+      if (typeof notifyAffiliate === 'function' && _currentAppData) {
+        notifyAffiliate({
+          clientId: _currentAppData.client_id,
+          affiliateId: data?.affiliate_id || null,
+          type: 'application_approved',
+          title: 'Affiliate Application Approved 🎉',
+          message: data?.referral_code
+            ? `Congratulations! আপনার Affiliate Application Approve হয়েছে। আপনার Referral Code: ${data.referral_code}`
+            : 'Congratulations! আপনার Affiliate Application Approve হয়েছে।'
+        });
+      }
     } else {
       const note = document.getElementById('afpNoteInput').value.trim();
       const { error } = await supabase
@@ -606,6 +635,24 @@ window.affProfileAction = async function(action) {
         .eq('id', _currentAffId);
       if (error) throw new Error(error.message);
       if (typeof showToast === 'function') showToast('Application reject করা হয়েছে', 'warning');
+
+      if (typeof logAudit === 'function') {
+        logAudit('application_rejected', {
+          targetTable: 'affiliate_applications',
+          targetId: _currentAffId,
+          details: { client_id: _currentAppData?.client_id || null }
+        });
+      }
+      if (typeof notifyAffiliate === 'function' && _currentAppData) {
+        notifyAffiliate({
+          clientId: _currentAppData.client_id,
+          type: 'application_rejected',
+          title: 'Affiliate Application Update',
+          message: note
+            ? `দুঃখিত, আপনার Affiliate Application এই মুহূর্তে Approve করা যায়নি। কারণ: ${note}`
+            : 'দুঃখিত, আপনার Affiliate Application এই মুহূর্তে Approve করা যায়নি। আপনি পরবর্তীতে আবার Apply করতে পারবেন।'
+        });
+      }
     }
 
     affProfileHide();
