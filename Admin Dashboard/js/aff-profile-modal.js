@@ -333,28 +333,23 @@
     <div class="afp-section">
       <div class="afp-section-label"><i class="ti ti-id-badge"></i> Identity</div>
       <div class="afp-row">
-        <span class="afp-row-label">NID Number</span>
+        <span class="afp-row-label">ID Card Number</span>
         <span class="afp-row-val" id="afpNidNum">—</span>
       </div>
       <div class="afp-row" style="flex-direction:column;gap:8px;">
-        <span class="afp-row-label">NID Photo</span>
+        <span class="afp-row-label">ID Card Photo</span>
         <div id="afpNidPhotoWrap" style="display:none;">
-          <img class="afp-nid-img" id="afpNidPhoto" src="" alt="NID" onclick="window.open(this.src,'_blank')"/>
+          <img class="afp-nid-img" id="afpNidPhoto" src="" alt="ID Card" onclick="window.open(this.src,'_blank')"/>
         </div>
         <span id="afpNidPhotoNA" style="color:var(--muted);font-size:.8rem;">Not provided</span>
       </div>
     </div>
 
-    <!-- Skills & Services -->
+    <!-- Skills -->
     <div class="afp-section">
-      <div class="afp-section-label"><i class="ti ti-bulb"></i> Skills & Preferred Services</div>
+      <div class="afp-section-label"><i class="ti ti-bulb"></i> Marketing Skills</div>
       <div class="afp-row" style="flex-direction:column;gap:6px;">
-        <span class="afp-row-label">Marketing Skills</span>
         <div class="afp-tags-wrap" id="afpSkills"></div>
-      </div>
-      <div class="afp-row" style="flex-direction:column;gap:6px;margin-top:12px;">
-        <span class="afp-row-label">Service Sectors</span>
-        <div class="afp-tags-wrap" id="afpServices"></div>
       </div>
     </div>
 
@@ -453,7 +448,6 @@ function _resetProfileFields() {
   document.getElementById('afpNidPhotoWrap').style.display = 'none';
   document.getElementById('afpNidPhotoNA').style.display = '';
   document.getElementById('afpSkills').innerHTML = '';
-  document.getElementById('afpServices').innerHTML = '';
   document.getElementById('afpRefSection').style.display = 'none';
 }
 
@@ -545,20 +539,6 @@ async function _populateProfile(d, requestedId) {
     skillsWrap.appendChild(tag);
   });
   if (!skills.length) skillsWrap.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">কোনো skill দেয়নি</span>';
-
-  // Services
-  const svcWrap = document.getElementById('afpServices');
-  svcWrap.innerHTML = '';
-  const svcs = Array.isArray(d.preferred_services)
-    ? d.preferred_services
-    : (d.preferred_services ? JSON.parse(d.preferred_services) : []);
-  svcs.forEach(svc => {
-    const tag = document.createElement('span');
-    tag.className = 'afp-tag service';
-    tag.textContent = svc;
-    svcWrap.appendChild(tag);
-  });
-  if (!svcs.length) svcWrap.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">কোনো sector select করেনি</span>';
 
   // Referrer
   const refSection = document.getElementById('afpRefSection');

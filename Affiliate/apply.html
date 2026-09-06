@@ -431,25 +431,55 @@
       display: none;
       text-align: center;
       padding: 48px 24px;
+      position: relative;
+      overflow: hidden;
     }
     .aff-success.visible { display: block; }
+    .aff-confetti-wrap { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .aff-confetti { position:absolute; top:-14px; width:9px; height:14px; opacity:0; border-radius:2px; animation:affConfettiFall 1.9s ease-in forwards; }
+    @keyframes affConfettiFall {
+      0%   { opacity:0; transform:translateY(0) rotate(0deg) scale(.6); }
+      8%   { opacity:1; }
+      100% { opacity:0; transform:translateY(260px) rotate(540deg) scale(.9); }
+    }
+    .aff-check-ring {
+      position:relative; width:72px; height:72px; margin:0 auto 20px;
+      display:flex; align-items:center; justify-content:center;
+      animation: affPopIn .55s cubic-bezier(.26,1.4,.44,1) both;
+    }
+    @keyframes affPopIn {
+      0%   { transform:scale(0); opacity:0; }
+      60%  { transform:scale(1.12); opacity:1; }
+      100% { transform:scale(1); }
+    }
+    .aff-check-pulse {
+      position:absolute; inset:0; border-radius:50%;
+      border:2px solid rgba(52,211,153,.55);
+      animation: affRingPulse 1.6s ease-out .35s 2;
+    }
+    @keyframes affRingPulse {
+      0%   { transform:scale(.8); opacity:.8; }
+      100% { transform:scale(1.9); opacity:0; }
+    }
     .aff-success-icon {
-      width: 72px; height: 72px;
-      background: rgba(52,211,153,.15);
-      border: 2px solid rgba(52,211,153,.4);
+      position:relative;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at 35% 30%, rgba(52,211,153,.32), rgba(52,211,153,.12));
+      border: 2px solid rgba(52,211,153,.55);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
       color: #34d399;
-      margin: 0 auto 20px;
+      box-shadow: 0 0 24px rgba(52,211,153,.35);
     }
     .aff-success h2 {
       font-size: 1.4rem;
       font-weight: 800;
       margin-bottom: 10px;
       color: #fff;
+      animation: affFadeUp .5s ease .25s both;
     }
     .aff-success p {
       font-size: .88rem;
@@ -457,6 +487,7 @@
       line-height: 1.7;
       max-width: 400px;
       margin: 0 auto 24px;
+      animation: affFadeUp .5s ease .38s both;
     }
     .aff-success .wait-badge {
       display: inline-flex;
@@ -469,6 +500,11 @@
       border-radius: 50px;
       font-size: .8rem;
       font-weight: 600;
+      animation: affFadeUp .5s ease .5s both;
+    }
+    @keyframes affFadeUp {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
     }
 
     /* ── Error banner ─────────────────────────────────────── */
@@ -516,7 +552,11 @@
 
     <!-- Success State -->
     <div class="aff-success" id="successView">
-      <div class="aff-success-icon"><i class="ti ti-check"></i></div>
+      <div class="aff-confetti-wrap" id="affConfettiWrap"></div>
+      <div class="aff-check-ring">
+        <span class="aff-check-pulse"></span>
+        <div class="aff-success-icon"><i class="ti ti-check"></i></div>
+      </div>
       <h2>Application জমা হয়েছে! 🎉</h2>
       <p>আপনার Affiliate Application সফলভাবে submit হয়েছে। আমাদের team review করে ২৪ ঘণ্টার মধ্যে আপনাকে জানাবে।</p>
       <span class="wait-badge">
@@ -639,10 +679,11 @@
         <div class="form-group">
           <label class="form-label">
             <i class="ti ti-credit-card"></i>
-            NID Number
+            ID Card Number
             <span class="required">*</span>
           </label>
-          <input type="text" id="f_nid_number" class="form-input" placeholder="আপনার জাতীয় পরিচয়পত্র নম্বর" required/>
+          <input type="text" id="f_nid_number" class="form-input" placeholder="NID / Student ID / College ID নম্বর" required/>
+          <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:5px;">NID না থাকলে Student ID বা College/University ID card-এর নম্বরও দেওয়া যাবে</div>
         </div>
         <div class="form-group" style="opacity:0; pointer-events:none;"><!-- spacer --></div>
       </div>
@@ -651,13 +692,13 @@
         <div class="form-group">
           <label class="form-label">
             <i class="ti ti-id-badge-2"></i>
-            NID-এর Photo
+            ID Card-এর Photo
             <span class="required">*</span>
           </label>
           <div class="upload-area" id="nidUploadArea">
             <input type="file" id="f_nid_photo" accept="image/*,.pdf" onchange="handleFileUpload(this, 'nidPreview', 'nidUploadArea')"/>
             <i class="ti ti-upload"></i>
-            <p>NID কার্ডের ছবি drag করুন অথবা <strong>browse</strong> করুন</p>
+            <p>ID card-এর ছবি drag করুন অথবা <strong>browse</strong> করুন (NID / Student ID / College ID)</p>
             <p style="margin-top:4px;font-size:.7rem;">JPG, PNG, PDF — max 5MB</p>
             <div class="upload-preview" id="nidPreview">
               <i class="ti ti-check-circle"></i>
@@ -705,26 +746,9 @@
             onkeydown="handleSkillInput(event)"
           />
         </div>
-        <div class="skills-hint">উদাহরণ: Facebook Marketing, Content Creation, Video Editing, WhatsApp Marketing, SEO</div>
+        <div class="skills-hint" style="margin-bottom:8px;">নিচ থেকে ক্লিক করেও skill যোগ করতে পারেন:</div>
+        <div class="skills-wrap" id="skillSuggestions" style="border:none;background:none;padding:0;gap:7px;"></div>
         <input type="hidden" id="f_skills" value="[]"/>
-      </div>
-
-      <!-- ── Services to Affiliate ────────────────────────── -->
-      <div class="form-section-label">
-        <i class="ti ti-layout-grid"></i>
-        Service Sectors (সর্বোচ্চ ৫টি)
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">
-          কোন service গুলোতে affiliate করতে চান?
-          <span class="required">*</span>
-        </label>
-        <div class="services-grid" id="servicesGrid">
-          <!-- dynamically built -->
-        </div>
-        <div class="service-limit-note" id="serviceLimitNote">০টি selected</div>
-        <input type="hidden" id="f_services" value="[]"/>
       </div>
 
       <!-- ── Affiliate ID (optional) ──────────────────────── -->
@@ -787,59 +811,56 @@
 <script>
 'use strict';
 
-/* ── Services list ──────────────────────────────────────── */
-const SERVICES = [
-  'Thesis Writing',
-  'Assignment Writing',
-  'Research Paper & Proposal',
-  'SPSS Analysis',
-  'Proofreading & Editing',
-  'Formatting',
-  'Turnitin / Plagiarism Check',
-  'Presentation Slides',
-  'Handwritten Service',
-  'CSE/SWE Technical Support',
-  'Data Collection',
+/* ── Suggested marketing skills (click to add) ───────────
+   Affiliates promote all of Scriptora's services now — not
+   restricted to specific sectors — so this just helps them
+   pick skills quickly instead of typing everything by hand. */
+const SUGGESTED_SKILLS = [
+  'Facebook Marketing','WhatsApp Marketing','Instagram Marketing',
+  'Content Creation','SEO','Copywriting','Personal Branding',
+  'University Networking','Community/Group Management',
+  'Referral Marketing','Canva Design','TikTok Marketing',
+  'YouTube Marketing','Email Marketing'
 ];
 
-let selectedSkills   = [];
-let selectedServices = [];
-const MAX_SERVICES   = 5;
+let selectedSkills = [];
 
-/* ── Build service checkboxes ───────────────────────────── */
-(function buildServices() {
-  const grid = document.getElementById('servicesGrid');
-  SERVICES.forEach(svc => {
-    const item = document.createElement('label');
-    item.className = 'service-check-item';
-    item.innerHTML = `
-      <input type="checkbox" value="${svc}" onchange="toggleService(this, '${svc}')"/>
-      <span>${svc}</span>
-    `;
-    grid.appendChild(item);
+/* ── Build skill suggestion chips ───────────────────────── */
+(function buildSkillSuggestions() {
+  const wrap = document.getElementById('skillSuggestions');
+  SUGGESTED_SKILLS.forEach(sk => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'skill-suggestion-chip';
+    chip.dataset.skill = sk;
+    chip.textContent = '+ ' + sk;
+    chip.style.cssText = 'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);border-radius:20px;padding:5px 12px;font-size:.74rem;cursor:pointer;transition:all .15s;';
+    chip.onclick = () => addSuggestedSkill(sk, chip);
+    wrap.appendChild(chip);
   });
 })();
 
-/* ── Service toggle ─────────────────────────────────────── */
-window.toggleService = function(el, svc) {
-  const note = document.getElementById('serviceLimitNote');
-  if (el.checked) {
-    if (selectedServices.length >= MAX_SERVICES) {
-      el.checked = false;
-      note.textContent = `সর্বোচ্চ ${MAX_SERVICES}টি select করা যাবে`;
-      note.classList.add('exceeded');
-      return;
-    }
-    selectedServices.push(svc);
-    el.closest('.service-check-item').classList.add('checked');
-  } else {
-    selectedServices = selectedServices.filter(s => s !== svc);
-    el.closest('.service-check-item').classList.remove('checked');
-  }
-  note.textContent = `${selectedServices.length}টি selected`;
-  note.classList.toggle('exceeded', selectedServices.length >= MAX_SERVICES);
-  document.getElementById('f_services').value = JSON.stringify(selectedServices);
+window.addSuggestedSkill = function(sk, chip) {
+  if (selectedSkills.includes(sk)) return;
+  selectedSkills.push(sk);
+  renderSkillTags();
+  chip.style.opacity = '.35';
+  chip.style.pointerEvents = 'none';
+  chip.textContent = '✓ ' + sk;
 };
+function syncSuggestionChip(sk, added) {
+  const chip = document.querySelector(`.skill-suggestion-chip[data-skill="${CSS.escape(sk)}"]`);
+  if (!chip) return;
+  if (added) {
+    chip.style.opacity = '.35';
+    chip.style.pointerEvents = 'none';
+    chip.textContent = '✓ ' + sk;
+  } else {
+    chip.style.opacity = '1';
+    chip.style.pointerEvents = 'auto';
+    chip.textContent = '+ ' + sk;
+  }
+}
 
 /* ── Payment method ─────────────────────────────────────── */
 window.selectPayment = function(btn) {
@@ -878,11 +899,13 @@ window.handleSkillInput = function(e) {
     if (val && !selectedSkills.includes(val)) {
       selectedSkills.push(val);
       renderSkillTags();
+      syncSuggestionChip(val, true);
     }
     e.target.value = '';
   } else if (e.key === 'Backspace' && e.target.value === '' && selectedSkills.length > 0) {
-    selectedSkills.pop();
+    const removed = selectedSkills.pop();
     renderSkillTags();
+    syncSuggestionChip(removed, false);
   }
 };
 
@@ -901,8 +924,9 @@ function renderSkillTags() {
 }
 
 window.removeSkill = function(i) {
-  selectedSkills.splice(i, 1);
+  const removed = selectedSkills.splice(i, 1)[0];
   renderSkillTags();
+  syncSuggestionChip(removed, false);
 };
 
 /* ── File upload preview ────────────────────────────────── */
@@ -942,11 +966,10 @@ function validate() {
   if (!v('f_facebook'))    return 'Facebook profile link দিন।';
   if (!v('f_payment_method'))  return 'Payment method select করুন।';
   if (!v('f_payment_number'))  return 'Payment account number দিন।';
-  if (!v('f_nid_number'))      return 'NID number লিখুন।';
-  if (!document.getElementById('f_nid_photo').files[0])  return 'NID-এর photo দিন।';
+  if (!v('f_nid_number'))      return 'ID card নম্বর লিখুন (NID / Student ID / College ID)।';
+  if (!document.getElementById('f_nid_photo').files[0])  return 'ID card-এর photo দিন।';
   if (!document.getElementById('f_photo').files[0])      return 'আপনার একটি photo দিন।';
   if (selectedSkills.length === 0)   return 'কমপক্ষে একটি marketing skill যোগ করুন।';
-  if (selectedServices.length === 0) return 'কমপক্ষে একটি service sector select করুন।';
   if (!v('f_about'))       return 'নিজের সম্পর্কে কিছু লিখুন।';
   return null;
 }
@@ -1005,7 +1028,7 @@ document.getElementById('affForm').addEventListener('submit', async function(e) 
       nid_photo_path:   nidPath,
       photo_path:       photoPath,
       skills:           selectedSkills,
-      preferred_services: selectedServices,
+      preferred_services: [],
       referrer_code:    document.getElementById('f_referrer_code').value.trim() || null,
       about_self:       document.getElementById('f_about').value.trim(),
       status:           'pending',
@@ -1020,6 +1043,7 @@ document.getElementById('affForm').addEventListener('submit', async function(e) 
     /* Show success */
     document.getElementById('affForm').style.display = 'none';
     document.getElementById('successView').classList.add('visible');
+    spawnConfetti();
 
   } catch (ex) {
     showError('Submit করতে সমস্যা হয়েছে: ' + ex.message);
@@ -1027,6 +1051,26 @@ document.getElementById('affForm').addEventListener('submit', async function(e) 
     btn.innerHTML = '<i class="ti ti-send"></i> Application Submit করুন';
   }
 });
+
+/* ── Celebration confetti burst on success ─────────────── */
+function spawnConfetti() {
+  const wrap = document.getElementById('affConfettiWrap');
+  wrap.innerHTML = '';
+  const colors = ['#34d399', '#60a5fa', '#f59e0b', '#f472b6', '#a78bfa', '#facc15'];
+  for (let i = 0; i < 26; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'aff-confetti';
+    const left  = Math.random() * 100;
+    const delay = Math.random() * 0.35;
+    const rot   = Math.floor(Math.random() * 360);
+    piece.style.left = left + '%';
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = delay + 's';
+    piece.style.transform = `rotate(${rot}deg)`;
+    if (Math.random() > 0.5) piece.style.borderRadius = '50%';
+    wrap.appendChild(piece);
+  }
+}
 
 /* ── CSS spin keyframe ───────────────────────────────────── */
 const style = document.createElement('style');

@@ -2838,13 +2838,77 @@
       </div>
 
       <!-- Success state -->
-      <div id="affModalSuccess" style="display:none;text-align:center;padding:40px 20px;">
-        <div style="width:64px;height:64px;background:rgba(52,211,153,.15);border:2px solid rgba(52,211,153,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 18px;">✓</div>
-        <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:10px;">Application জমা হয়েছে! 🎉</h3>
-        <p style="font-size:.85rem;color:rgba(255,255,255,.5);line-height:1.7;max-width:380px;margin:0 auto 20px;">
+      <div id="affModalSuccess" style="display:none;text-align:center;padding:40px 20px;position:relative;overflow:hidden;">
+        <style>
+          #affModalSuccess .aff-confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+          #affModalSuccess .aff-confetti{position:absolute;top:-14px;width:9px;height:14px;opacity:0;border-radius:2px;animation:affConfettiFall 1.9s ease-in forwards;}
+          @keyframes affConfettiFall{
+            0%{opacity:0;transform:translateY(0) rotate(0deg) scale(.6);}
+            8%{opacity:1;}
+            100%{opacity:0;transform:translateY(230px) rotate(540deg) scale(.9);}
+          }
+          #affModalSuccess .aff-check-ring{
+            position:relative;width:72px;height:72px;margin:0 auto 18px;
+            display:flex;align-items:center;justify-content:center;
+            animation:affPopIn .55s cubic-bezier(.26,1.4,.44,1) both;
+          }
+          @keyframes affPopIn{
+            0%{transform:scale(0);opacity:0;}
+            60%{transform:scale(1.12);opacity:1;}
+            100%{transform:scale(1);}
+          }
+          #affModalSuccess .aff-check-pulse{
+            position:absolute;inset:0;border-radius:50%;
+            border:2px solid rgba(52,211,153,.55);
+            animation:affRingPulse 1.6s ease-out .35s 2;
+          }
+          @keyframes affRingPulse{
+            0%{transform:scale(.8);opacity:.8;}
+            100%{transform:scale(1.9);opacity:0;}
+          }
+          #affModalSuccess .aff-check-circle{
+            position:relative;width:100%;height:100%;border-radius:50%;
+            background:radial-gradient(circle at 35% 30%, rgba(52,211,153,.32), rgba(52,211,153,.12));
+            border:2px solid rgba(52,211,153,.55);
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 24px rgba(52,211,153,.35);
+          }
+          #affModalSuccess .aff-check-svg path{
+            stroke-dasharray:32;stroke-dashoffset:32;
+            animation:affCheckDraw .4s ease-out .3s forwards;
+          }
+          @keyframes affCheckDraw{ to{ stroke-dashoffset:0; } }
+          #affModalSuccess .aff-success-title{
+            animation:affFadeUp .5s ease .25s both;
+          }
+          #affModalSuccess .aff-success-text{
+            animation:affFadeUp .5s ease .38s both;
+          }
+          #affModalSuccess .aff-success-badge{
+            animation:affFadeUp .5s ease .5s both;
+          }
+          @keyframes affFadeUp{
+            from{opacity:0;transform:translateY(8px);}
+            to{opacity:1;transform:translateY(0);}
+          }
+        </style>
+
+        <div class="aff-confetti-wrap" id="affConfettiWrap"></div>
+
+        <div class="aff-check-ring">
+          <span class="aff-check-pulse"></span>
+          <div class="aff-check-circle">
+            <svg class="aff-check-svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+              <path d="M7 15.5L12.5 21L23 9" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <h3 class="aff-success-title" style="font-size:1.2rem;font-weight:800;margin-bottom:10px;">Application জমা হয়েছে! 🎉</h3>
+        <p class="aff-success-text" style="font-size:.85rem;color:rgba(255,255,255,.5);line-height:1.7;max-width:380px;margin:0 auto 20px;">
           আপনার Affiliate Application সফলভাবে submit হয়েছে। Admin review করে ২৪ ঘণ্টার মধ্যে জানাবে।
         </p>
-        <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:600;">
+        <span class="aff-success-badge" style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:600;">
           ⏰ সর্বোচ্চ ২৪ ঘণ্টা অপেক্ষা করুন
         </span>
       </div>
@@ -2920,21 +2984,22 @@
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-            <label style="font-size:.77rem;font-weight:600;color:rgba(255,255,255,.65);">NID Number <span style="color:#f87171;font-size:.65rem;">*</span></label>
-            <input type="text" id="m_nid_number" class="aff-modal-input" placeholder="জাতীয় পরিচয়পত্র নম্বর" required/>
+            <label style="font-size:.77rem;font-weight:600;color:rgba(255,255,255,.65);">ID Card Number <span style="color:#f87171;font-size:.65rem;">*</span></label>
+            <input type="text" id="m_nid_number" class="aff-modal-input" placeholder="NID / Student ID / College ID নম্বর" required/>
+            <div style="font-size:.7rem;color:rgba(255,255,255,.3);">NID না থাকলে Student ID বা College/University ID card-এর নম্বরও দেওয়া যাবে</div>
           </div>
           <div style="opacity:0;pointer-events:none;"></div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div>
-            <label style="font-size:.77rem;font-weight:600;color:rgba(255,255,255,.65);display:block;margin-bottom:7px;">NID-এর Photo <span style="color:#f87171;font-size:.65rem;">*</span></label>
+            <label style="font-size:.77rem;font-weight:600;color:rgba(255,255,255,.65);display:block;margin-bottom:7px;">ID Card-এর Photo <span style="color:#f87171;font-size:.65rem;">*</span></label>
             <div id="mNidArea" style="border:2px dashed rgba(255,255,255,.12);border-radius:10px;padding:18px 12px;text-align:center;cursor:pointer;position:relative;transition:border-color .2s;"
               onmouseover="this.style.borderColor='rgba(45,110,247,.45)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)'">
               <input type="file" id="m_nid_photo" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
                 onchange="mHandleFile(this,'mNidPreview')"/>
               <div style="font-size:1.4rem;margin-bottom:6px;">📄</div>
-              <p style="font-size:.75rem;color:rgba(255,255,255,.4);margin:0;" id="mNidText">NID ছবি browse করুন<br><span style="font-size:.68rem;">JPG, PNG, PDF — max 5MB</span></p>
+              <p style="font-size:.75rem;color:rgba(255,255,255,.4);margin:0;" id="mNidText">ID card-এর ছবি browse করুন (NID / Student ID / College ID)<br><span style="font-size:.68rem;">JPG, PNG, PDF — max 5MB</span></p>
               <div id="mNidPreview" style="display:none;align-items:center;justify-content:center;gap:8px;font-size:.8rem;color:#34d399;">
                 ✔ <span id="mNidFileName">—</span>
               </div>
@@ -2972,21 +3037,9 @@
               placeholder="Skill লিখে Enter চাপুন…"
               onkeydown="mHandleSkillInput(event)"/>
           </div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.3);">উদাহরণ: Facebook Marketing, Content Creation, SEO, WhatsApp Marketing</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-bottom:4px;">নিচ থেকে ক্লিক করেও skill যোগ করতে পারেন:</div>
+          <div id="mSkillSuggestions" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
           <input type="hidden" id="m_skills" value="[]"/>
-        </div>
-
-        <!-- Section: Services -->
-        <div style="display:flex;align-items:center;gap:10px;font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin:20px 0 16px;">
-          📋 Service Sectors (সর্বোচ্চ ৫টি)
-          <span style="flex:1;height:1px;background:rgba(255,255,255,.07);display:inline-block;"></span>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-          <label style="font-size:.77rem;font-weight:600;color:rgba(255,255,255,.65);">কোন service-এ affiliate করতে চান? <span style="color:#f87171;font-size:.65rem;">*</span></label>
-          <div id="mServicesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;"></div>
-          <div id="mServiceNote" style="font-size:.73rem;color:rgba(255,255,255,.35);margin-top:4px;">০টি selected</div>
-          <input type="hidden" id="m_services" value="[]"/>
         </div>
 
         <!-- Section: Referral code -->
@@ -3110,7 +3163,7 @@
 function affiliateApply() {
   document.getElementById('affApplyModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
-  mBuildServices();
+  mBuildSkillSuggestions();
   mPrefillUser();
 }
 function closeAffApplyModal() {
@@ -3137,48 +3190,42 @@ async function mPrefillUser() {
   } catch(e) {}
 }
 
-/* ── Services list ──────────────────────────────────── */
-const M_SERVICES = [
-  'Thesis Writing','Assignment Writing','Research Paper & Proposal',
-  'SPSS Analysis','Proofreading & Editing','Formatting',
-  'Turnitin / Plagiarism Check','Presentation Slides',
-  'Handwritten Service','CSE/SWE Technical Support','Data Collection'
+/* ── Suggested marketing skills (click to add) ─────────
+   Affiliates aren't restricted to specific service sectors
+   anymore — they can promote all of Scriptora's services —
+   so here we just help them pick skills quickly instead of
+   typing everything by hand. */
+const M_SUGGESTED_SKILLS = [
+  'Facebook Marketing','WhatsApp Marketing','Instagram Marketing',
+  'Content Creation','SEO','Copywriting','Personal Branding',
+  'University Networking','Community/Group Management',
+  'Referral Marketing','Canva Design','TikTok Marketing',
+  'YouTube Marketing','Email Marketing'
 ];
 let mSelectedSkills   = [];
-let mSelectedServices = [];
-const M_MAX_SERVICES  = 5;
-let mServicesBuilt    = false;
+let mSkillSuggestionsBuilt = false;
 
-function mBuildServices() {
-  if (mServicesBuilt) return;
-  mServicesBuilt = true;
-  const grid = document.getElementById('mServicesGrid');
-  M_SERVICES.forEach(svc => {
-    const label = document.createElement('label');
-    label.className = 'aff-svc-item';
-    label.innerHTML = `<input type="checkbox" value="${svc}" onchange="mToggleService(this,'${svc}')"/><span>${svc}</span>`;
-    grid.appendChild(label);
+function mBuildSkillSuggestions() {
+  if (mSkillSuggestionsBuilt) return;
+  mSkillSuggestionsBuilt = true;
+  const wrap = document.getElementById('mSkillSuggestions');
+  M_SUGGESTED_SKILLS.forEach(sk => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'aff-skill-suggestion-chip';
+    chip.dataset.skill = sk;
+    chip.textContent = '+ ' + sk;
+    chip.style.cssText = 'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);border-radius:20px;padding:5px 12px;font-size:.74rem;cursor:pointer;transition:all .15s;';
+    chip.onclick = () => mAddSuggestedSkill(sk, chip);
+    wrap.appendChild(chip);
   });
 }
 
-window.mToggleService = function(el, svc) {
-  const note = document.getElementById('mServiceNote');
-  if (el.checked) {
-    if (mSelectedServices.length >= M_MAX_SERVICES) {
-      el.checked = false;
-      note.textContent = `সর্বোচ্চ ${M_MAX_SERVICES}টি select করা যাবে`;
-      note.style.color = '#f87171';
-      return;
-    }
-    mSelectedServices.push(svc);
-    el.closest('.aff-svc-item').classList.add('checked');
-  } else {
-    mSelectedServices = mSelectedServices.filter(s => s !== svc);
-    el.closest('.aff-svc-item').classList.remove('checked');
-  }
-  note.textContent = `${mSelectedServices.length}টি selected`;
-  note.style.color = mSelectedServices.length >= M_MAX_SERVICES ? '#f59e0b' : 'rgba(255,255,255,.35)';
-  document.getElementById('m_services').value = JSON.stringify(mSelectedServices);
+window.mAddSuggestedSkill = function(sk, chip) {
+  if (mSelectedSkills.includes(sk)) return;
+  mSelectedSkills.push(sk);
+  mRenderSkillTags();
+  mSyncSuggestionChip(sk, true);
 };
 
 /* ── Payment method ─────────────────────────────────── */
@@ -3206,11 +3253,13 @@ window.mHandleSkillInput = function(e) {
     if (val && !mSelectedSkills.includes(val)) {
       mSelectedSkills.push(val);
       mRenderSkillTags();
+      mSyncSuggestionChip(val, true);
     }
     e.target.value = '';
   } else if (e.key === 'Backspace' && e.target.value === '' && mSelectedSkills.length > 0) {
-    mSelectedSkills.pop();
+    const removed = mSelectedSkills.pop();
     mRenderSkillTags();
+    mSyncSuggestionChip(removed, false);
   }
 };
 function mRenderSkillTags() {
@@ -3225,7 +3274,26 @@ function mRenderSkillTags() {
   });
   document.getElementById('m_skills').value = JSON.stringify(mSelectedSkills);
 }
-window.mRemoveSkill = function(i) { mSelectedSkills.splice(i,1); mRenderSkillTags(); };
+window.mRemoveSkill = function(i) {
+  const removed = mSelectedSkills.splice(i,1)[0];
+  mRenderSkillTags();
+  mSyncSuggestionChip(removed, false);
+};
+/* Keep a suggestion chip's look in sync when its skill is added/removed
+   via the text input (Enter) or the ✕ on a tag, not just chip clicks. */
+function mSyncSuggestionChip(sk, added) {
+  const chip = document.querySelector(`.aff-skill-suggestion-chip[data-skill="${CSS.escape(sk)}"]`);
+  if (!chip) return;
+  if (added) {
+    chip.style.opacity = '.35';
+    chip.style.pointerEvents = 'none';
+    chip.textContent = '✓ ' + sk;
+  } else {
+    chip.style.opacity = '1';
+    chip.style.pointerEvents = 'auto';
+    chip.textContent = '+ ' + sk;
+  }
+}
 
 /* ── File upload ────────────────────────────────────── */
 window.mHandleFile = function(input, previewId) {
@@ -3251,11 +3319,10 @@ function mValidate() {
   if (!v('m_facebook'))        return 'Facebook profile link দিন।';
   if (!v('m_payment_method'))  return 'Payment method select করুন।';
   if (!v('m_payment_number'))  return 'Payment account number দিন।';
-  if (!v('m_nid_number'))      return 'NID number লিখুন।';
-  if (!document.getElementById('m_nid_photo').files[0]) return 'NID-এর photo দিন।';
+  if (!v('m_nid_number'))      return 'ID card নম্বর লিখুন (NID / Student ID / College ID)।';
+  if (!document.getElementById('m_nid_photo').files[0]) return 'ID card-এর photo দিন।';
   if (!document.getElementById('m_photo').files[0])     return 'আপনার একটি photo দিন।';
   if (mSelectedSkills.length === 0)   return 'কমপক্ষে একটি marketing skill যোগ করুন।';
-  if (mSelectedServices.length === 0) return 'কমপক্ষে একটি service sector select করুন।';
   if (!v('m_about'))           return 'নিজের সম্পর্কে কিছু লিখুন।';
   return null;
 }
@@ -3318,7 +3385,7 @@ document.getElementById('affModalForm').addEventListener('submit', async functio
       nid_photo_path:     nidPath,
       photo_path:         photoPath,
       skills:             mSelectedSkills,
-      preferred_services: mSelectedServices,
+      preferred_services: [],
       referrer_code:      v('m_referrer_code') || null,
       about_self:         v('m_about'),
       status:             'pending',
@@ -3330,6 +3397,7 @@ document.getElementById('affModalForm').addEventListener('submit', async functio
     /* Show success */
     document.getElementById('affModalForm').style.display = 'none';
     document.getElementById('affModalSuccess').style.display = 'block';
+    mSpawnConfetti();
 
     /* Refresh affiliate state after 2s so dashboard updates */
     setTimeout(() => { loadAffiliateState(true); }, 2000);
@@ -3340,6 +3408,31 @@ document.getElementById('affModalForm').addEventListener('submit', async functio
     btn.textContent = '🚀 Application Submit করুন';
   }
 });
+
+/* ── Celebration confetti burst on success ─────────────
+   Generated on demand (not hardcoded in HTML) so each piece
+   gets a random position/color/timing and the burst can be
+   replayed cleanly if the modal is used again. ─────────── */
+function mSpawnConfetti() {
+  const wrap = document.getElementById('affConfettiWrap');
+  wrap.innerHTML = '';
+  const colors = ['#34d399', '#60a5fa', '#f59e0b', '#f472b6', '#a78bfa', '#facc15'];
+  const pieceCount = 26;
+  for (let i = 0; i < pieceCount; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'aff-confetti';
+    const left  = Math.random() * 100;
+    const delay = Math.random() * 0.35;
+    const color = colors[i % colors.length];
+    const rot   = Math.floor(Math.random() * 360);
+    piece.style.left = left + '%';
+    piece.style.background = color;
+    piece.style.animationDelay = delay + 's';
+    piece.style.transform = `rotate(${rot}deg)`;
+    if (Math.random() > 0.5) piece.style.borderRadius = '50%';
+    wrap.appendChild(piece);
+  }
+}
 </script>
 </body>
 
